@@ -70,8 +70,11 @@ DESCRIBE DETAIL employees
 
 -- COMMAND ----------
 
--- NOTE: as we are using the default catalog, this command will not work in Free edition or Trial version of Databricks
-%fs ls 'dbfs:/user/hive/warehouse/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- (Public DBFS root is disabled and the workspace catalog does not expose a file location)
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- Instead, we can see the underlying Parquet files using _metadata.file_path
+SELECT _metadata.file_path AS file_name, * FROM employees
 
 -- COMMAND ----------
 
@@ -90,7 +93,10 @@ SELECT * FROM employees
 
 -- COMMAND ----------
 
--- MAGIC %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- After the UPDATE, we can see new Parquet files were created
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
 
 -- COMMAND ----------
 
@@ -111,11 +117,17 @@ DESCRIBE HISTORY employees
 
 -- COMMAND ----------
 
--- MAGIC %fs ls 'dbfs:/user/hive/warehouse/employees/_delta_log'
+-- NOTE: Direct browsing of _delta_log is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees/_delta_log'
+-- DESCRIBE HISTORY shows the same transaction log information (one row per commit)
+DESCRIBE HISTORY employees
 
 -- COMMAND ----------
 
--- MAGIC %fs head 'dbfs:/user/hive/warehouse/employees/_delta_log/00000000000000000005.json'
+-- NOTE: Reading raw _delta_log JSON files is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs head 'dbfs:/user/hive/warehouse/employees/_delta_log/00000000000000000005.json'
+-- Instead, we can inspect a specific commit version's details from the history
+SELECT * FROM (DESCRIBE HISTORY employees) WHERE version = 5
 
 -- COMMAND ----------
 
