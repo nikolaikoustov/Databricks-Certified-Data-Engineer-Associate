@@ -5,7 +5,8 @@
 
 -- COMMAND ----------
 
-USE CATALOG hive_metastore
+-- we cannot set catalog to hive_metastore as this type is not supported in Free edition
+-- USE CATALOG hive_metastore
 
 -- COMMAND ----------
 
@@ -30,7 +31,7 @@ SELECT * FROM employees
 
 -- COMMAND ----------
 
-RESTORE TABLE employees TO VERSION AS OF 5
+RESTORE TABLE employees TO VERSION AS OF 6
 
 -- COMMAND ----------
 
@@ -65,7 +66,10 @@ DESCRIBE HISTORY employees
 
 -- COMMAND ----------
 
--- MAGIC %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- After OPTIMIZE, we can see the compacted Parquet files
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
 
 -- COMMAND ----------
 
@@ -79,7 +83,10 @@ VACUUM employees
 
 -- COMMAND ----------
 
--- MAGIC %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- Before VACUUM, stale files are still present
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
 
 -- COMMAND ----------
 
@@ -91,11 +98,14 @@ SET spark.databricks.delta.retentionDurationCheck.enabled = false;
 
 -- COMMAND ----------
 
-VACUUM employees RETAIN 0 HOURS
+VACUUM employees RETAIN 1 HOURS
 
 -- COMMAND ----------
 
--- MAGIC %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- After VACUUM, only active files remain
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
 
 -- COMMAND ----------
 
@@ -117,4 +127,7 @@ SELECT * FROM employees
 
 -- COMMAND ----------
 
--- MAGIC %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- After DROP TABLE, the table and its files no longer exist
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
