@@ -9,7 +9,8 @@
 
 -- COMMAND ----------
 
-USE CATALOG hive_metastore
+-- NOTE: hive_metastore is not avaiable in Free edition or Trial version of Databricks
+-- USE CATALOG hive_metastore
 
 -- COMMAND ----------
 
@@ -69,7 +70,8 @@ DESCRIBE DETAIL employees
 
 -- COMMAND ----------
 
--- MAGIC %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- NOTE: as we are using the default catalog, this command will not work in Free edition or Trial version of Databricks
+%fs ls 'dbfs:/user/hive/warehouse/employees'
 
 -- COMMAND ----------
 
