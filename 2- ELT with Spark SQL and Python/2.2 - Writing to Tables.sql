@@ -111,4 +111,4 @@ WHEN NOT MATCHED AND u.category = 'Computer Science' THEN
 
 -- COMMAND ----------
 
-
+DESCRIBE HISTORY orders

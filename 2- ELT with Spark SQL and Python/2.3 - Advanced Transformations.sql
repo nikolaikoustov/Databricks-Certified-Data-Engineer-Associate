@@ -35,6 +35,7 @@ FROM customers
 
 -- COMMAND ----------
 
+-- NOTE Will not work without a schema
 --SELECT from_json(profile) AS profile_struct
 --  FROM customers;
 
@@ -46,6 +47,7 @@ LIMIT 1
 
 -- COMMAND ----------
 
+-- using a sample JSON and scahme_of_json() we can construct a schema then pass it to from_json() function 
 CREATE OR REPLACE TEMP VIEW parsed_customers AS
   SELECT customer_id, from_json(profile, schema_of_json('{"first_name":"Thomas","last_name":"Lane","gender":"Male","address":{"street":"06 Boulevard Victor Hugo","city":"Paris","country":"France"}}')) AS profile_struct
   FROM customers;
@@ -58,11 +60,13 @@ DESCRIBE parsed_customers
 
 -- COMMAND ----------
 
+-- now we can use struct syntax to reference attributes of it
 SELECT customer_id, profile_struct.first_name, profile_struct.address.country
 FROM parsed_customers
 
 -- COMMAND ----------
 
+-- Using .* syntax we can flatten the structure 
 CREATE OR REPLACE TEMP VIEW customers_final AS
   SELECT customer_id, profile_struct.*
   FROM parsed_customers;
@@ -81,6 +85,8 @@ FROM orders
 
 -- COMMAND ----------
 
+-- What if a column is of type array ?
+-- Use explode() function to split this into multiple rows - one per element of the array
 SELECT order_id, customer_id, explode(books) AS book 
 FROM orders
 
@@ -91,6 +97,7 @@ FROM orders
 
 -- COMMAND ----------
 
+-- collect_set() function helps to collect unique values into a single column - doing reverse of explode() 
 SELECT customer_id,
   collect_set(order_id) AS orders_set,
   collect_set(books.book_id) AS books_set
@@ -105,6 +112,7 @@ GROUP BY customer_id
 
 -- COMMAND ----------
 
+-- and combining both functions helps to produce a list of books per customer as an array of unique book ids
 SELECT customer_id,
   collect_set(books.book_id) As before_flatten,
   array_distinct(flatten(collect_set(books.book_id))) AS after_flatten
@@ -119,6 +127,7 @@ GROUP BY customer_id
 
 -- COMMAND ----------
 
+-- JOINS allow us to enrich data in one table (orders) with describing columns in another table (books)
 CREATE OR REPLACE VIEW orders_enriched AS
 SELECT *
 FROM (
@@ -162,6 +171,9 @@ SELECT * FROM orders_updates
 
 -- COMMAND ----------
 
+-- PIVOT operation on data sets allows to send input rows then apply an aggregation function to each group of rows.
+-- the unique values of the column specified in the PIVOT clause are used as column names in the output.
+-- the aggregation function is applied to each group of rows with the same value in the PIVOT column
 CREATE OR REPLACE TABLE transactions AS
 
 SELECT * FROM (
