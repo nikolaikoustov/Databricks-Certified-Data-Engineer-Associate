@@ -108,8 +108,8 @@ SELECT * FROM csv.`${dataset_bookstore}/books-csv`
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC #files = dbutils.fs.ls(f"{dataset_bookstore}/books-csv")
--- MAGIC #display(files)
+-- MAGIC files = dbutils.fs.ls(f"{dataset_bookstore}/books-csv")
+-- MAGIC display(files)
 
 -- COMMAND ----------
 
@@ -148,6 +148,7 @@ SELECT * FROM csv.`${dataset_bookstore}/books-csv`
 
 -- COMMAND ----------
 
+-- we can read JSON files on a Volume with CTAS directly - even in serverless Databricks engine
 DROP TABLE IF EXISTS customers;
 CREATE TABLE customers AS
 SELECT * FROM json.`${dataset_bookstore}/customers-json`;
@@ -163,6 +164,8 @@ SELECT * FROM books_unparsed;
 
 -- COMMAND ----------
 
+-- we can read CSV files on a Volume with read_files() built-in function
+DROP TABLE IF EXISTS books;
 CREATE TABLE books AS
 SELECT * FROM read_files(
     '${dataset_bookstore}/books-csv/export_*.csv',
@@ -170,7 +173,7 @@ SELECT * FROM read_files(
     header => 'true',
     delimiter => ';');
 
--- This syntax is not supported on Serverless Databricks engine 
+-- This syntax to create a CSV type View or Table is NOT supported on Serverless Databricks engine 
 --CREATE TEMP VIEW books_tmp_vw
 --   (book_id STRING, title STRING, author STRING, category STRING, price DOUBLE)
 --USING CSV
@@ -189,4 +192,7 @@ SELECT * FROM books
 
 -- Note that new tables in Databricks are created to use Parquet format by default and are Delta tables
 -- so they are still backed by efficient mechanism for modification and querying 
+
+-- The read_files function automatically tries to infer a unified schema from all the source files. 
+-- If any value doesn’t match the expected schema, it's stored in an extra column called _rescued_data as a JSON string.
 DESCRIBE EXTENDED books
