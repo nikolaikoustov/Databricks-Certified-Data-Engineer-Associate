@@ -44,9 +44,30 @@ SELECT count(*) FROM json.`${dataset_bookstore}/customers-json`
 
 -- COMMAND ----------
 
+-- The input_file_name() function is no longer supported in newer versions of the Databricks Runtime. 
+-- As an alternative, you can use the _metadata.file_path attribute to retrieve the file path information.
+-- as we are reading files from a Volume, the _metadata.file_path attribute will contain the full file path with 'dbfs:/Volumes/<catalog>/<schema>/<volume name>' prefix e.g. 'dbfs:/Volumes/workspace/aws_training_data/bookstore_dataset/customers-json/export_001.json'.
+
  SELECT *,
     -- input_file_name() source_file
-    _metadata.file_path  source_file
+    _metadata.file_path source_file
+  FROM json.`${dataset_bookstore}/customers-json`;
+
+
+
+-- COMMAND ----------
+
+-- By leveraging the _metadata column, you can access various details about your input files, such as:
+-- 1) _metadata.file_path: The full path to the input file.
+-- 2) _metadata.file_name: The name of the file, including its extension.
+-- 3) _metadata.file_size: The size of the file in bytes.
+-- 4) _metadata.file_modification_time: The timestamp of the last modification made to the file. 
+
+   SELECT DISTINCT 
+    _metadata.file_path source_file,
+    _metadata.file_size file_size,
+    _metadata.file_modification_time file_date
+    
   FROM json.`${dataset_bookstore}/customers-json`;
 
 -- COMMAND ----------
