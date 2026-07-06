@@ -17,7 +17,11 @@
 -- COMMAND ----------
 
 -- DBTITLE 1,Create training schema
-CREATE SCHEMA IF NOT EXISTS workspace.aws_training_data
+USE CATALOG workspace;
+DROP SCHEMA IF EXISTS aws_training_data CASCADE;
+CREATE SCHEMA aws_training_data
+MANAGED LOCATION 's3://nk-databricks-training-july-2026/training-notebooks/schemas/aws_training_data';
+DESCRIBE SCHEMA aws_training_data;
 
 -- COMMAND ----------
 
@@ -39,6 +43,18 @@ VALUES (3 INT, 2 INT, 1 INT)
 -- COMMAND ----------
 
 DESCRIBE EXTENDED managed_default
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC Using **Data Engineering** -> **Data Injestion** -> **Create or modify table from file upload**, 
+-- MAGIC load data from the **retail_sales.json** file
+
+-- COMMAND ----------
+
+-- Run this command AFTER importing retail_sales.json using the File import facility under Data Ingestion
+-- The created table should be of type managed (as data is loaded relative to the schema location)
+DESCRIBE TABLE EXTENDED retail_sales;
 
 -- COMMAND ----------
 
@@ -157,7 +173,16 @@ MANAGED LOCATION 's3://nk-databricks-training-july-2026/training-notebooks/schem
 
 -- COMMAND ----------
 
+-- After CREATE SCHEMA CMANAGED LOCATION, schema data does not yet exist.
+LIST 's3://nk-databricks-training-july-2026/training-notebooks/schemas/custom'
+
+-- COMMAND ----------
+
 DESCRIBE DATABASE EXTENDED custom
+
+-- COMMAND ----------
+
+SHOW TABLES;
 
 -- COMMAND ----------
 
@@ -185,7 +210,17 @@ DESCRIBE EXTENDED managed_custom
 
 -- COMMAND ----------
 
+-- After tables were created and populated, we can see external table data
+LIST 's3://nk-databricks-training-july-2026/training-notebooks/schemas/custom'
+
+-- COMMAND ----------
+
 DESCRIBE EXTENDED external_custom
+
+-- COMMAND ----------
+
+-- After tables were created and populated, we can see external table data
+LIST 's3://nk-databricks-training-july-2026/training-notebooks/external_custom'
 
 -- COMMAND ----------
 
@@ -203,3 +238,23 @@ SELECT * FROM custom.managed_custom
 -- Original: %fs ls 'dbfs:/mnt/demo/external_custom'
 -- After DROP, external table data files are PRESERVED at the S3 location.
 LIST 's3://nk-databricks-training-july-2026/training-notebooks/external_custom'
+
+-- COMMAND ----------
+
+DROP SCHEMA custom;
+
+-- COMMAND ----------
+
+-- Original: %fs ls 'dbfs:/mnt/demo/external_custom'
+-- After DROP SCHEMA, schema data are preserved at the S3 location.
+LIST 's3://nk-databricks-training-july-2026/training-notebooks/schemas/'
+
+-- COMMAND ----------
+
+DROP SCHEMA IF EXISTS custom CASCADE;
+
+-- COMMAND ----------
+
+-- Original: %fs ls 'dbfs:/mnt/demo/external_custom'
+-- After DROP SCHEMA CASCADE, table data are STILL preserved at the S3 location.
+LIST 's3://nk-databricks-training-july-2026/training-notebooks/schemas/custom'
