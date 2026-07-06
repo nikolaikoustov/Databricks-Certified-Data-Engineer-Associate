@@ -148,6 +148,7 @@ SELECT * FROM csv.`${dataset_bookstore}/books-csv`
 
 -- COMMAND ----------
 
+DROP TABLE IF EXISTS customers;
 CREATE TABLE customers AS
 SELECT * FROM json.`${dataset_bookstore}/customers-json`;
 
@@ -169,6 +170,7 @@ SELECT * FROM read_files(
     header => 'true',
     delimiter => ';');
 
+-- This syntax is not supported on Serverless Databricks engine 
 --CREATE TEMP VIEW books_tmp_vw
 --   (book_id STRING, title STRING, author STRING, category STRING, price DOUBLE)
 --USING CSV
