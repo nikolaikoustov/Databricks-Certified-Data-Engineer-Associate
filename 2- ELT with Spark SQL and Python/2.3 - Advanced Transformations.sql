@@ -164,6 +164,19 @@ SELECT * FROM orders_enriched_v2;
 
 -- COMMAND ----------
 
+-- To handle comparisons where NULL values should be treated as equal to other NULL values, 
+-- Spark provides the null-safe equal operator, which is written as <=>. For example:
+
+SELECT *
+FROM orders o
+INNER JOIN customers c
+ON o.customer_id <=> c.customer_id;
+
+-- Here, o.customer_id <=> c.customer_id returns true if both values are equal, or if both values are NULL. 
+-- Otherwise, it returns false.
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC ## Set Operations
 
