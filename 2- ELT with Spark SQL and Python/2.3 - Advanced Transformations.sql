@@ -106,6 +106,10 @@ GROUP BY customer_id
 
 -- COMMAND ----------
 
+SELECT * FROM books
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ##Flatten Arrays
@@ -137,6 +141,17 @@ INNER JOIN books b
 ON o.book.book_id = b.book_id;
 
 SELECT * FROM orders_enriched
+
+-- COMMAND ----------
+
+-- JOINS allow us to enrich data in one table (orders) with describing columns in another table (books)
+CREATE OR REPLACE TEMP VIEW orders_enriched_v2 AS
+SELECT o.customer_id, explode(books) as book, c.address.country
+FROM orders o
+INNER JOIN customers_final c
+ON o.customer_id = c.customer_id;
+
+SELECT * FROM orders_enriched_v2;
 
 -- COMMAND ----------
 
@@ -193,4 +208,39 @@ SELECT * FROM transactions
 
 -- COMMAND ----------
 
+-- this query retrieves how many copies of each book were sold per in-scope country 
+CREATE OR REPLACE TABLE transactions_by_country AS
 
+SELECT * FROM (
+  SELECT
+    customer_id,
+    country,
+    book.book_id AS book_id,
+    b.title AS title,
+    b.author as author
+  FROM orders_enriched_v2 o
+  INNER JOIN books b
+  ON o.book.book_id = b.book_id  
+) PIVOT (
+  -- we need to count customer_id as we want a count of each book sold per country NOT how many books each customer bought
+  count(customer_id) AS total FOR country IN ('China', 'Canada', 'Mexico')
+);
+
+SELECT * FROM transactions_by_country
+
+-- COMMAND ----------
+
+-- This query validates the break-down by country about by providing the total sold for all in-scope countries 
+SELECT book_id, title, author, count (*) as total FROM (
+  SELECT
+    customer_id,
+    country,
+    book.book_id AS book_id,
+    b.title AS title,
+    b.author as author
+  FROM orders_enriched_v2 o
+  INNER JOIN books b
+  ON o.book.book_id = b.book_id
+  WHERE country IN ('China', 'Canada', 'Mexico')
+)
+GROUP BY book_id, title, author;
