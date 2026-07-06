@@ -170,6 +170,8 @@ display(orders_details_df)
 
 # COMMAND ----------
 
+# Not supported on serverless clusters
+
 #spark.conf.set("spark.sql.autoBroadcastJoinThreshold", 20 * 1024 * 1024)
 
 # COMMAND ----------

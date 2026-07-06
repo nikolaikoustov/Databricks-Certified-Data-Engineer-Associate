@@ -5,7 +5,8 @@
 
 -- COMMAND ----------
 
---USE CATALOG hive_metastore
+-- we cannot set catalog to hive_metastore as this type is not supported in Serverless edition
+-- USE CATALOG hive_metastore
 
 -- COMMAND ----------
 
@@ -27,10 +28,6 @@ DELETE FROM employees
 -- COMMAND ----------
 
 SELECT * FROM employees
-
--- COMMAND ----------
-
-DESCRIBE HISTORY employees
 
 -- COMMAND ----------
 
@@ -70,7 +67,10 @@ DESCRIBE HISTORY employees
 
 -- COMMAND ----------
 
---%fs ls '/path/to/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- After OPTIMIZE, we can see the compacted Parquet files
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
 
 -- COMMAND ----------
 
@@ -84,7 +84,10 @@ VACUUM employees
 
 -- COMMAND ----------
 
---%fs ls '/path/to/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- Before VACUUM, stale files are still present
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
 
 -- COMMAND ----------
 
@@ -100,11 +103,14 @@ ALTER TABLE employees SET TBLPROPERTIES ('delta.deletedFileRetentionDuration'='i
 
 -- COMMAND ----------
 
-VACUUM employees RETAIN 0 HOURS
+VACUUM employees RETAIN 1 HOURS
 
 -- COMMAND ----------
 
---%fs ls '/path/to/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- After VACUUM, only active files remain
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
 
 -- COMMAND ----------
 
@@ -127,4 +133,7 @@ SELECT * FROM employees
 
 -- COMMAND ----------
 
---%fs ls '/path/to/employees'
+-- NOTE: Direct file browsing via %fs is not available for managed tables on serverless compute
+-- For hive_metastore catalog, use: %fs ls 'dbfs:/user/hive/warehouse/employees'
+-- After DROP TABLE, the table and its files no longer exist
+SELECT DISTINCT _metadata.file_path AS file_name FROM employees
