@@ -30,12 +30,21 @@ DESCRIBE customers
 
 -- COMMAND ----------
 
+-- Modern Spark SQL syntax to query JSON columns directly
 SELECT customer_id, profile:first_name, profile:address:country 
 FROM customers
 
 -- COMMAND ----------
 
--- NOTE Will not work without a schema
+-- older Spark SQL syntax using get_json_object() funtion and JSONPath expressions 
+SELECT customer_id, 
+    get_json_object(profile, '$.first_name') AS first_name,
+    get_json_object(profile, '$.address.country') AS country 
+FROM customers
+
+-- COMMAND ----------
+
+-- NOTE The below query will NOT work without a JSON schema provided
 --SELECT from_json(profile) AS profile_struct
 --  FROM customers;
 
