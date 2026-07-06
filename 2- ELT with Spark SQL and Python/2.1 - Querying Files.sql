@@ -185,8 +185,6 @@ SELECT * FROM books
 
 -- COMMAND ----------
 
+-- Note that new tables in Databricks are created to use Parquet format by default and are Delta tables
+-- so they are still backed by efficient mechanism for modification and querying 
 DESCRIBE EXTENDED books
-
--- COMMAND ----------
-
-
