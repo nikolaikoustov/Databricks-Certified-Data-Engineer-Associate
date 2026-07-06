@@ -4,3 +4,4 @@ This version of Databricks only supports Serverless engines.
 
 # Resources
 - https://docs.databricks.com/aws/en/compute/serverless/limitations
+- https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files
