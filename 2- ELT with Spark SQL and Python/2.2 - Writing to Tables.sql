@@ -30,6 +30,7 @@ SELECT * FROM orders
 
 -- COMMAND ----------
 
+-- Helps to have atomicity as read transactions can still access old version of it 
 CREATE OR REPLACE TABLE orders AS
 SELECT * FROM parquet.`${dataset_bookstore}/orders`
 
@@ -39,6 +40,8 @@ DESCRIBE HISTORY orders
 
 -- COMMAND ----------
 
+-- alternative syntax, but requires table to exist
+-- also preserves schema of the table 
 INSERT OVERWRITE orders
 SELECT * FROM parquet.`${dataset_bookstore}/orders`
 
@@ -48,6 +51,7 @@ DESCRIBE HISTORY orders
 
 -- COMMAND ----------
 
+-- shows that the INSERT OVERWRITE command preserves the existing schema of the table
 INSERT OVERWRITE orders
 SELECT *, current_timestamp() FROM parquet.`${dataset_bookstore}/orders`
 
@@ -58,6 +62,7 @@ SELECT *, current_timestamp() FROM parquet.`${dataset_bookstore}/orders`
 
 -- COMMAND ----------
 
+-- this statement appends new records into the table
 INSERT INTO orders
 SELECT * FROM parquet.`${dataset_bookstore}/orders-new`
 
@@ -72,9 +77,10 @@ SELECT count(*) FROM orders
 
 -- COMMAND ----------
 
+-- to update existing records (as opposed to creating duplicates) and add new records use a temp view
 CREATE OR REPLACE TEMP VIEW customers_updates AS 
 SELECT * FROM json.`${dataset_bookstore}/customers-json-new`;
-
+-- ... and MERGE INTO statement
 MERGE INTO customers c
 USING customers_updates u
 ON c.customer_id = u.customer_id
@@ -95,6 +101,8 @@ SELECT * FROM books_updates
 
 -- COMMAND ----------
 
+-- we can see that MERGE operation works with source and target being of different type  (JSON, CSV vs Parquet) 
+-- the operation is idempotent and can be run multiple times
 MERGE INTO books b
 USING books_updates u
 ON b.book_id = u.book_id AND b.title = u.title
