@@ -183,6 +183,7 @@ def process_gold():
       query = (spark.table("daily_customer_books_tmp")
                     .writeStream
                     .format("delta")
+                    # Note that we specify the outputMode as 'complete' as we have no intention to process records in Gold layer incrementally or access it with a streaming view
                     .outputMode("complete")
                     .option("checkpointLocation", f"{checkpoints_bookstore}/daily_customer_books")
                     .trigger(availableNow=True)
@@ -213,6 +214,8 @@ process_gold()
 
 # COMMAND ----------
 
+# This command clears the state of all streams in the notebook
+# Not that for Serverless engine it is irrelevant as Streams are started and run to completion in each cell where Display or Write operations take place
 for s in spark.streams.active:
     print("Stopping stream: " + s.id)
     s.stop()
