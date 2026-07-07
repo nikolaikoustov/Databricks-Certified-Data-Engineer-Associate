@@ -51,3 +51,73 @@ databricks bundle run --target prod bookstore_dlt
 
 - https://docs.databricks.com/dev-tools/bundles/index.html
 - https://docs.databricks.com/delta-live-tables/index.html
+
+## Local development setup for Databricks
+
+### Installing the Databricks CLI on Linux
+
+```bash
+# Option 1: Using curl (recommended)
+curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+# Option 2: Manual download
+# Download the latest release for your architecture from:
+# https://github.com/databricks/cli/releases
+# For Intel/AMD 64-bit:
+wget https://github.com/databricks/cli/releases/latest/download/databricks_cli_linux_amd64.zip
+unzip databricks_cli_linux_amd64.zip
+sudo mv databricks /usr/local/bin/
+
+# Verify installation
+databricks --version
+```
+
+### Authentication
+
+Generate a personal access token in Databricks:
+1. Click your user icon (top-right) → **Settings**
+2. Go to **Developer** → **Access tokens**
+3. Click **Generate new token**, set a description and expiry, then copy the token
+
+Configure the CLI:
+
+```bash
+# Interactive setup (prompts for host and token)
+databricks configure
+
+# When prompted:
+#   Host: https://dbc-9d50ffda-1704.cloud.databricks.com
+#   Token: <paste your personal access token>
+
+# Verify authentication works
+databricks auth env --host https://dbc-9d50ffda-1704.cloud.databricks.com
+databricks clusters list
+```
+
+This creates a configuration profile at `~/.databrickscfg`. You can also set environment variables:
+
+```bash
+export DATABRICKS_HOST=https://dbc-9d50ffda-1704.cloud.databricks.com
+export DATABRICKS_TOKEN=<your-token>
+```
+
+### Cloning the repo and deploying the pipeline
+
+```bash
+# Clone the training repo
+git clone <your-github-repo-url>
+cd Databricks-Certified-Data-Engineer-Associate
+
+# Switch to the working branch
+git checkout serverless-mode_nk-changes-for-aws
+
+# Validate, deploy, and run the pipeline
+databricks bundle validate --target dev
+databricks bundle deploy --target dev
+databricks bundle run --target dev bookstore_dlt
+```
+
+### Resources
+
+- https://docs.databricks.com/dev-tools/cli/install.html
+- https://docs.databricks.com/dev-tools/cli/authentication.html
