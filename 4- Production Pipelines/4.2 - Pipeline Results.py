@@ -1,11 +1,10 @@
 # Databricks notebook source
 # DBTITLE 1,Set catalog and schema context
-# MAGIC %sql
-# MAGIC dbutils.widgets.text("catalog", "workspace")
-# MAGIC dbutils.widgets.text("schema", "aws_training_data")
-# MAGIC
-# MAGIC spark.sql(f"USE CATALOG {dbutils.widgets.get('catalog')}")
-# MAGIC spark.sql(f"USE SCHEMA {dbutils.widgets.get('schema')}")
+dbutils.widgets.text("catalog", "workspace")
+dbutils.widgets.text("schema", "aws_training_data")
+
+spark.sql(f"USE CATALOG {dbutils.widgets.get('catalog')}")
+spark.sql(f"USE SCHEMA {dbutils.widgets.get('schema')}")
 
 # COMMAND ----------
 
