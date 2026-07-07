@@ -3,6 +3,7 @@
 -- MAGIC
 -- MAGIC
 -- MAGIC # Delta Live Tables
+-- MAGIC Originally called Delta Live Tables (DLT), Databricks since opensourced this technology into Apache Spark project as 'Spark Declarative Pipelines'. 
 
 -- COMMAND ----------
 
@@ -14,7 +15,9 @@
 
 -- COMMAND ----------
 
---CREATE WIDGET TEXT datasets_path DEFAULT "/Volumes/workspace/default/bookstore_dataset"
+-- DBTITLE 1,Cell 3
+-- Widget not needed in pipeline context: datasets_path is provided via pipeline configuration
+-- CREATE WIDGET TEXT datasets_path DEFAULT "/Volumes/workspace/default/bookstore_dataset"
 
 -- COMMAND ----------
 
@@ -28,11 +31,11 @@
 
 -- COMMAND ----------
 
+-- DBTITLE 1,Cell 6
 CREATE OR REFRESH STREAMING LIVE TABLE orders_raw
 COMMENT "The raw books orders, ingested from orders-raw"
 AS SELECT * FROM cloud_files("${datasets_path}/orders-json-raw", "json",
-                              map("cloudFiles.inferColumnTypes", "true",
-                                  "cloudFiles.schemaLocation", "/Volumes/workspace/default/bookstore_checkpoints/dlt/orders_raw"));
+                              map("cloudFiles.inferColumnTypes", "true"));
 
 -- COMMAND ----------
 
@@ -41,7 +44,9 @@ AS SELECT * FROM cloud_files("${datasets_path}/orders-json-raw", "json",
 
 -- COMMAND ----------
 
-CREATE OR REFRESH LIVE TABLE customers
+-- DBTITLE 1,Cell 8
+-- Note that this table is created as a regular table, not streaming table
+CREATE OR REFRESH LIVE TABLE customers_dlt
 COMMENT "The customers lookup table, ingested from customers-json"
 AS SELECT * FROM json.`${datasets_path}/customers-json`
 
@@ -57,6 +62,7 @@ AS SELECT * FROM json.`${datasets_path}/customers-json`
 
 -- COMMAND ----------
 
+-- DBTITLE 1,Cell 10
 CREATE OR REFRESH STREAMING LIVE TABLE orders_cleaned (
   CONSTRAINT valid_order_number EXPECT (order_id IS NOT NULL) ON VIOLATION DROP ROW
 )
@@ -66,7 +72,7 @@ AS
          cast(from_unixtime(order_timestamp, 'yyyy-MM-dd HH:mm:ss') AS timestamp) order_timestamp, o.books,
          c.profile:address:country as country
   FROM STREAM(LIVE.orders_raw) o
-  LEFT JOIN LIVE.customers c
+  LEFT JOIN LIVE.customers_dlt c
     ON o.customer_id = c.customer_id
 
 -- COMMAND ----------

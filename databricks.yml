@@ -1,0 +1,28 @@
+# Declarative Automation Bundle definition for the Bookstore DLT Pipeline
+# Deploy with: databricks bundle deploy --target dev
+
+bundle:
+  name: bookstore-dlt-training
+
+resources:
+  pipelines:
+    bookstore_dlt:
+      name: "Bookstore DLT Pipeline"
+      catalog: "workspace"
+      schema: "aws_training_data"
+      serverless: true
+      photon: true
+      continuous: false
+      channel: "CURRENT"
+      configuration:
+        datasets_path: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+      libraries:
+        - notebook:
+            path: "./4- Production Pipelines/4.1 - Delta Live Tables.sql"
+
+targets:
+  dev:
+    mode: development
+    default: true
+  prod:
+    mode: production
