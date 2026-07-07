@@ -20,6 +20,20 @@ resources:
         - notebook:
             path: "./4- Production Pipelines/4.1 - Delta Live Tables.sql"
 
+    bookstore_pyspark_dlt:
+      name: "Bookstore DLT Pipeline (PySpark)"
+      catalog: "workspace"
+      schema: "aws_training_data"
+      serverless: true
+      photon: true
+      continuous: false
+      channel: "CURRENT"
+      configuration:
+        datasets_path: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+      libraries:
+        - file:
+            path: "./4- Production Pipelines/4.1b - Delta Live Tables PySpark.py"
+
 targets:
   dev:
     mode: development
