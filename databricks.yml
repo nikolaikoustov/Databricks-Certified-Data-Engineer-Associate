@@ -61,6 +61,8 @@ resources:
           notebook_task:
             notebook_path: "./4- Production Pipelines/4.2 - Pipeline Results"
             base_parameters:
+              catalog: "workspace"
+              schema: "aws_training_data"
               dataset_bookstore: "/Volumes/workspace/aws_training_data/bookstore_dataset"
           environment_key: "Default"
 

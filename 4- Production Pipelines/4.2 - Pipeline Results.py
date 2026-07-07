@@ -1,4 +1,14 @@
 # Databricks notebook source
+# DBTITLE 1,Set catalog and schema context
+# MAGIC %sql
+# MAGIC dbutils.widgets.text("catalog", "workspace")
+# MAGIC dbutils.widgets.text("schema", "aws_training_data")
+# MAGIC
+# MAGIC spark.sql(f"USE CATALOG {dbutils.widgets.get('catalog')}")
+# MAGIC spark.sql(f"USE SCHEMA {dbutils.widgets.get('schema')}")
+
+# COMMAND ----------
+
 #files = dbutils.fs.ls("dbfs:/mnt/demo/dlt/demo_bookstore")
 #display(files)
 
@@ -19,10 +29,12 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Cell 5
 # MAGIC %sql
-# MAGIC SELECT * FROM <CATALOG>.<SCHEMA>.cn_daily_customer_books
+# MAGIC SELECT * FROM cn_daily_customer_books
 
 # COMMAND ----------
 
+# DBTITLE 1,Cell 6
 # MAGIC %sql
-# MAGIC SELECT * FROM <CATALOG>.<SCHEMA>.fr_daily_customer_books
+# MAGIC SELECT * FROM fr_daily_customer_books
