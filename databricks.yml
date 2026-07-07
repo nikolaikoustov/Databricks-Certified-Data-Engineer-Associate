@@ -34,6 +34,41 @@ resources:
         - notebook:
             path: "./4- Production Pipelines/4.1b - Delta Live Tables PySpark.py"
 
+  jobs:
+    bookstore_demo_job:
+      name: "Bookstore Demo Job"
+      performance_target: "PERFORMANCE_OPTIMIZED"
+      max_concurrent_runs: 1
+      queue:
+        enabled: true
+      tasks:
+        - task_key: "Run_Load_Data_Notebook"
+          notebook_task:
+            notebook_path: "./4- Production Pipelines/4.3 - Land New Data Task"
+            base_parameters:
+              dataset_bookstore: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+          environment_key: "Default"
+
+        - task_key: "Run_DLT_Pipeline"
+          depends_on:
+            - task_key: "Run_Load_Data_Notebook"
+          pipeline_task:
+            pipeline_id: "${resources.pipelines.bookstore_dlt.id}"
+
+        - task_key: "Run_Execute_Results_Notebook"
+          depends_on:
+            - task_key: "Run_DLT_Pipeline"
+          notebook_task:
+            notebook_path: "./4- Production Pipelines/4.2 - Pipeline Results"
+            base_parameters:
+              dataset_bookstore: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+          environment_key: "Default"
+
+      environments:
+        - environment_key: "Default"
+          spec:
+            environment_version: "5"
+
 targets:
   dev:
     mode: development
