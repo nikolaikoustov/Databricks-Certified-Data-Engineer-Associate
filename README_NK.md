@@ -1,10 +1,22 @@
 # Overview
 This file contains additional notes related to the changes made to the origimal notebooks for running on Databricks Trial version deployed on AWS.
 This version of Databricks only supports Serverless engines.
+It also contains additional resources as well as steps to create and deploy pipelines with databricks CLI.
 
 # Resources
+- https://docs.databricks.com/aws/en/getting-started/high-level-architecture
+- https://docs.databricks.com/aws/en/compute/serverless/
 - https://docs.databricks.com/aws/en/compute/serverless/limitations
+- https://docs.databricks.com/aws/en/data-engineering/procedural-vs-declarative
+- https://docs.databricks.com/aws/en/ldp/concepts/
+- https://docs.databricks.com/aws/en/ldp/developer/python-ref
+- https://docs.databricks.com/aws/en/ldp/best-practices
+- https://docs.databricks.com/aws/en/jobs/
 - https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files
+- https://docs.databricks.com/aws/en/pyspark/reference/
+- https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/
+
+# Deploying and running pipelines
 
 ## Deploying and running notebooks with DLT pipelines
 
