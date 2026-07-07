@@ -31,8 +31,8 @@ resources:
       configuration:
         datasets_path: "/Volumes/workspace/aws_training_data/bookstore_dataset"
       libraries:
-        - file:
-            path: "./4- Production Pipelines/4.1b - Delta Live Tables PySpark.py"
+        - notebook:
+            path: "./4- Production Pipelines/4.1b - Delta Live Tables PySpark"
 
 targets:
   dev:
