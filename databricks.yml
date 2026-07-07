@@ -32,7 +32,7 @@ resources:
         datasets_path: "/Volumes/workspace/aws_training_data/bookstore_dataset"
       libraries:
         - notebook:
-            path: "./4- Production Pipelines/4.1b - Delta Live Tables PySpark"
+            path: "./4- Production Pipelines/4.1b - Delta Live Tables PySpark.py"
 
 targets:
   dev:
