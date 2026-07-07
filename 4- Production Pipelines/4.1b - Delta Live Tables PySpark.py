@@ -7,7 +7,7 @@
 # COMMAND ----------
 
 import dlt
-from pyspark.sql.functions import col, count, date_trunc, from_unixtime, explode
+from pyspark.sql.functions import col, count, date_trunc, from_unixtime, explode, expr
 
 # The datasets_path is provided via pipeline configuration
 datasets_path = spark.conf.get("datasets_path")
@@ -59,11 +59,11 @@ def orders_cleaned():
                 orders.order_id,
                 orders.quantity,
                 orders.customer_id,
-                col("profile:first_name").alias("f_name"),
-                col("profile:last_name").alias("l_name"),
+                expr("profile:first_name").alias("f_name"),
+                expr("profile:last_name").alias("l_name"),
                 from_unixtime(col("order_timestamp"), "yyyy-MM-dd HH:mm:ss").cast("timestamp").alias("order_timestamp"),
                 orders.books,
-                col("profile:address:country").alias("country")
+                expr("profile:address:country").alias("country")
             )
     )
 
@@ -97,4 +97,3 @@ def fr_daily_customer_books():
             .groupBy("customer_id", "f_name", "l_name", date_trunc("DD", "order_timestamp").alias("order_date"))
             .agg(count("*").alias("books_counts"))
     )
-
