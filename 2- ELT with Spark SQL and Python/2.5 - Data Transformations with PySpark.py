@@ -166,7 +166,9 @@ display(orders_details_df)
 
 # COMMAND ----------
 
-#spark.conf.get("spark.sql.autoBroadcastJoinThreshold")
+# This parameter is not supported on Serverless engine - you get below error
+# [CONFIG_NOT_AVAILABLE.WITHOUT_SUGGESTION] Configuration spark.sql.autoBroadcastJoinThreshold is not available.  SQLSTATE: 42K0I 
+# spark.conf.get("spark.sql.autoBroadcastJoinThreshold")
 
 # COMMAND ----------
 
