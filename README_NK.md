@@ -34,8 +34,8 @@ The notebook `4- Production Pipelines/4.1 - Delta Live Tables.sql` contains Spar
 ### Pipeline definition
 
 The pipeline infrastructure is defined as code in `databricks.yml` at the repository root. This file specifies:
-- Pipeline name, catalog (`workspace`), and schema (`aws_training_data`)
-- Configuration: `datasets_path` pointing to the UC Volume with source data
+- Pipeline name, catalog, and schema — parameterized as bundle variables (`catalog` default `workspace`, `schema` default `aws_training_data`)
+- Configuration: `datasets_path` variable pointing to the UC Volume with source data (default `/Volumes/workspace/aws_training_data/bookstore_dataset`)
 - Source notebook reference
 - Deployment targets — three environments, only one of which is meant for direct CLI use:
   - `personal` — your own free-edition sandbox, deploy directly from the CLI, default target
@@ -65,6 +65,25 @@ databricks bundle run --target personal bookstore_dlt
 ```
 
 `personal` is the `default: true` target, so plain `databricks bundle deploy` (no `--target`) resolves to it — that's intentional, so a bare command can never accidentally land on shared dev or prod.
+
+### Overriding catalog/schema/dataset location per environment
+
+`catalog`, `schema`, and `datasets_path` are bundle [variables](https://docs.databricks.com/dev-tools/bundles/variables.html) (declared at the top of `databricks.yml`), not hardcoded values. They can be overridden two ways:
+
+```bash
+# One-off override from the CLI
+databricks bundle deploy --target personal --var="catalog=my_catalog" --var="schema=my_schema"
+```
+
+```yaml
+# Persistent override for a specific target, in databricks.yml
+targets:
+  personal:
+    variables:
+      catalog: my_personal_catalog
+```
+
+All three targets currently use the same defaults (`workspace` / `aws_training_data`), since each points at a separate workspace with its own catalog namespace — override only if you need a target to diverge from that.
 
 > **Note:** `dev` and `prod` are deployed exclusively through the GitHub Actions workflow (see [CI/CD](#cicd-automated-deployment-via-github-actions) below), never manually from the CLI. Don't configure a local profile or `DATABRICKS_TOKEN` for those workspaces — their credentials live only in GitHub Environment secrets used by CI. This keeps production additionally gated behind the required-reviewer approval on the `production` environment.
 

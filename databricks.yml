@@ -4,32 +4,43 @@
 bundle:
   name: bookstore-dlt-training
 
+variables:
+  catalog:
+    description: "Unity Catalog catalog for pipeline output tables and job parameters"
+    default: "workspace"
+  schema:
+    description: "Schema within the catalog for pipeline output tables and job parameters"
+    default: "aws_training_data"
+  datasets_path:
+    description: "UC Volume path containing the source bookstore dataset"
+    default: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+
 resources:
   pipelines:
     bookstore_dlt:
       name: "Bookstore DLT Pipeline"
-      catalog: "workspace"
-      schema: "aws_training_data"
+      catalog: "${var.catalog}"
+      schema: "${var.schema}"
       serverless: true
       photon: true
       continuous: false
       channel: "CURRENT"
       configuration:
-        datasets_path: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+        datasets_path: "${var.datasets_path}"
       libraries:
         - notebook:
             path: "./4- Production Pipelines/4.1 - Delta Live Tables.sql"
 
     bookstore_pyspark_dlt:
       name: "Bookstore DLT Pipeline (PySpark)"
-      catalog: "workspace"
-      schema: "aws_training_data"
+      catalog: "${var.catalog}"
+      schema: "${var.schema}"
       serverless: true
       photon: true
       continuous: false
       channel: "CURRENT"
       configuration:
-        datasets_path: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+        datasets_path: "${var.datasets_path}"
       libraries:
         - notebook:
             path: "./4- Production Pipelines/4.1b - Delta Live Tables PySpark.py"
@@ -46,7 +57,7 @@ resources:
           notebook_task:
             notebook_path: "./4- Production Pipelines/4.3 - Land New Data Task.py"
             base_parameters:
-              dataset_bookstore: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+              dataset_bookstore: "${var.datasets_path}"
           environment_key: "Default"
 
         - task_key: "Run_DLT_Pipeline"
@@ -61,9 +72,9 @@ resources:
           notebook_task:
             notebook_path: "./4- Production Pipelines/4.2 - Pipeline Results.py"
             base_parameters:
-              catalog: "workspace"
-              schema: "aws_training_data"
-              dataset_bookstore: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+              catalog: "${var.catalog}"
+              schema: "${var.schema}"
+              dataset_bookstore: "${var.datasets_path}"
           environment_key: "Default"
 
       environments:
@@ -74,6 +85,9 @@ resources:
 targets:
   # Personal sandbox — deploy directly from the CLI. Default target so bare
   # `databricks bundle deploy` (no --target) never touches shared dev/prod.
+  # To override a variable for this target only, add e.g.:
+  #   variables:
+  #     catalog: my_personal_catalog
   personal:
     mode: development
     default: true
