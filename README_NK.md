@@ -1,5 +1,5 @@
 # Overview
-This file contains additional notes related to the changes made to the origimal notebooks for running on Databricks Trial version deployed on AWS.
+This file contains additional notes related to the changes made to the original notebooks for running on Databricks Trial version deployed on AWS.
 This version of Databricks only supports Serverless engines.
 It also contains additional resources as well as steps to create and deploy pipelines with databricks CLI.
 
@@ -17,6 +17,7 @@ It also contains additional resources as well as steps to create and deploy pipe
 - https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/
 - https://docs.databricks.com/aws/en/dev-tools/bundles/ci-cd-bundles
 - https://docs.databricks.com/aws/en/dev-tools/ci-cd/github-actions
+- https://github.com/databricks/setup-cli
 
 # Deploying and running pipelines and jobs
 
@@ -36,7 +37,10 @@ The pipeline infrastructure is defined as code in `databricks.yml` at the reposi
 - Pipeline name, catalog (`workspace`), and schema (`aws_training_data`)
 - Configuration: `datasets_path` pointing to the UC Volume with source data
 - Source notebook reference
-- Deployment targets (`dev` and `prod`)
+- Deployment targets — three environments, only one of which is meant for direct CLI use:
+  - `personal` — your own free-edition sandbox, deploy directly from the CLI, default target
+  - `dev` — shared dev workspace, deployed only via GitHub Actions
+  - `prod` — production (aws-hosted), deployed only via GitHub Actions — see [CI/CD](#cicd-automated-deployment-via-github-actions) below
 
 ### Deploying and running
 
@@ -46,25 +50,23 @@ Using databricks CLI you can build then deploy Declarative Automation Bundles ('
 
 ```bash
 # Validate the bundle definition
-databricks bundle validate --target dev
+databricks bundle validate --target personal
 ```
 
 2. Create a DAB then deploy to a target:
-```
-# Deploy — creates/updates the pipeline in your Databricks workspace
-databricks bundle deploy --target dev
+```bash
+# Deploy — creates/updates the pipeline in your personal Databricks workspace
+databricks bundle deploy --target personal
 ```
 3. Run a pipeline:
-```
+```bash
 # Run — triggers a pipeline update (materializes all tables)
-databricks bundle run --target dev bookstore_dlt
+databricks bundle run --target personal bookstore_dlt
 ```
-To deploy and run pipeline for another target:
-``` 
-# For production deployment
-databricks bundle deploy --target prod
-databricks bundle run --target prod bookstore_dlt
-```
+
+`personal` is the `default: true` target, so plain `databricks bundle deploy` (no `--target`) resolves to it — that's intentional, so a bare command can never accidentally land on shared dev or prod.
+
+> **Note:** `dev` and `prod` are deployed exclusively through the GitHub Actions workflow (see [CI/CD](#cicd-automated-deployment-via-github-actions) below), never manually from the CLI. Don't configure a local profile or `DATABRICKS_TOKEN` for those workspaces — their credentials live only in GitHub Environment secrets used by CI. This keeps production additionally gated behind the required-reviewer approval on the `production` environment.
 
 ### What happens on deploy
 
@@ -77,7 +79,20 @@ databricks bundle run --target prod bookstore_dlt
 - https://docs.databricks.com/dev-tools/bundles/index.html
 - https://docs.databricks.com/delta-live-tables/index.html
 
-## Local development setup for Databricks
+## Local setup for Databricks
+
+### Provisioning Databricks workspace for personal target
+
+Your `personal` target needs its own Databricks workspace. Databricks Free Edition provisions one for you at no cost and is sufficient for this repo (serverless-only, which is all this bundle uses):
+
+1. Go to the [Databricks Free Edition sign-up page](https://login.databricks.com/?dbx_source=docs&intent=CE_SIGN_UP)
+2. Sign up with an email address (or SSO provider) — Databricks automatically provisions a new, single-user workspace for you
+3. Once provisioned, note your workspace URL from the browser address bar, e.g. `https://dbc-xxxxxxxx-xxxx.cloud.databricks.com/` — this is the `workspace.host` value to use for the `personal` target in `databricks.yml`
+4. Confirm Unity Catalog is enabled (Free Edition workspaces come with it by default) and that a default catalog/schema exists — `Includes/Copy-Datasets` and the bundle's notebooks expect `workspace.aws_training_data`
+
+Free Edition is quota-limited and serverless-only — see [limitations](https://www.databricks.com/aws/en/getting-started/free-edition-limitations) if you hit compute/storage caps. It replaced the old Community Edition, so ignore any Community Edition instructions you find elsewhere.
+
+Once the workspace exists, continue with CLI install and authentication below, then set `workspace.host` for the `personal` target in `databricks.yml` to your new workspace's URL.
 
 ### Installing the Databricks CLI on Linux
 
@@ -99,6 +114,8 @@ databricks --version
 
 ### Authentication
 
+Local CLI auth should only ever be configured against your **personal** workspace (e.g. `https://dbc-8247e575-4536.cloud.databricks.com/`) — never against the shared `dev` or `prod` hosts, whose credentials live solely in GitHub Environment secrets for CI.
+
 Generate a personal access token in Databricks:
 1. Click your user icon (top-right) → **Settings**
 2. Go to **Developer** → **Access tokens**
@@ -111,19 +128,21 @@ Configure the CLI:
 databricks configure
 
 # When prompted:
-#   Host: https://dbc-9d50ffda-1704.cloud.databricks.com
+#   Host: <paste the URL of your Free edition's workspace e.g. https://dbc-8247e575-4536.cloud.databricks.com>
 #   Token: <paste your personal access token>
-
-# Verify authentication works
-databricks auth env --host https://dbc-9d50ffda-1704.cloud.databricks.com
-databricks clusters list
 ```
 
-This creates a configuration profile at `~/.databrickscfg`. You can also set environment variables:
+This creates a configuration profile at `~/.databrickscfg`. You can also set environment variables if you prefer:
 
 ```bash
-export DATABRICKS_HOST=https://dbc-9d50ffda-1704.cloud.databricks.com
+export DATABRICKS_HOST=<URL of your Free edition's workspace e.g. https://dbc-8247e575-4536.cloud.databricks.com>
 export DATABRICKS_TOKEN=<your-token>
+```
+
+Verify authentication works:
+```bash
+databricks auth describe
+databricks clusters list
 ```
 
 ### Cloning the repo and deploying the pipeline
@@ -136,13 +155,33 @@ cd Databricks-Certified-Data-Engineer-Associate
 # Switch to the working branch
 git checkout serverless-mode_nk-changes-for-aws
 
-# Validate, deploy, and run the pipeline
-databricks bundle validate --target dev
-databricks bundle deploy --target dev
-databricks bundle run --target dev bookstore_dlt
+# Validate, deploy, and run the pipeline against your personal workspace
+databricks bundle validate --target personal
+databricks bundle deploy --target personal
+databricks bundle run --target personal bookstore_dlt
 ```
 
 ### Resources
 
 - https://docs.databricks.com/dev-tools/cli/install.html
 - https://docs.databricks.com/dev-tools/cli/authentication.html
+
+## CI/CD: automated deployment via GitHub Actions
+
+The workflow at `.github/workflows/databricks-deploy.yml` deploys the bundle automatically:
+
+- Push/merge to the `dev` branch → `databricks bundle deploy --target dev` against the **development** workspace (`workspace`)
+- Push/merge to the `prod` branch → `databricks bundle deploy --target prod` against the **production** workspace (`aws-hosted`)
+- Both can also be triggered manually via **Actions → Deploy Databricks Bundle → Run workflow**, choosing the target
+- Note: this repo does not currently have a `prod` branch — create one (e.g. `git checkout -b prod && git push -u origin prod`) before relying on the automatic trigger
+
+### One-time setup required in GitHub
+
+1. **Create two Environments** (repo **Settings → Environments**):
+   - `development`
+   - `production` — add a **required reviewer** here so prod deploys pause for manual approval
+2. **Add secrets to each Environment** (not repo-level secrets, so `dev` and `prod` can point at different workspaces):
+   - `DATABRICKS_HOST` — `https://dbc-9d50ffda-1704.cloud.databricks.com` for `development`, and `https://dbc-019e110a-3092.cloud.databricks.com/` (the `aws-hosted` production workspace) for `production`
+   - `DATABRICKS_TOKEN` — a personal access token or service-principal token for that workspace, scoped to deploy bundles (Can Manage on the target catalog/schema and pipeline)
+
+Once both environments have secrets configured, pushes to `dev`/`prod` will validate and deploy the bundle automatically; production runs will wait for approval from a configured reviewer before deploying.

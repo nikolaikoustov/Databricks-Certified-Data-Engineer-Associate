@@ -1,0 +1,69 @@
+name: Deploy Databricks Bundle
+
+on:
+  push:
+    branches:
+      - dev
+      - prod
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Bundle target to deploy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  deploy-dev:
+    name: Deploy to shared dev
+    if: |
+      github.ref == 'refs/heads/dev' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
+    runs-on: ubuntu-latest
+    environment: development
+    concurrency:
+      group: databricks-deploy-dev
+      cancel-in-progress: false
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v1.6.0
+
+      - name: Validate bundle
+        run: databricks bundle validate --target dev
+
+      - name: Deploy bundle
+        run: databricks bundle deploy --target dev
+
+  deploy-prod:
+    name: Deploy to production (aws-hosted)
+    if: |
+      github.ref == 'refs/heads/prod' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'prod')
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: databricks-deploy-prod
+      cancel-in-progress: false
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v1.6.0
+
+      - name: Validate bundle
+        run: databricks bundle validate --target prod
+
+      - name: Deploy bundle
+        run: databricks bundle deploy --target prod

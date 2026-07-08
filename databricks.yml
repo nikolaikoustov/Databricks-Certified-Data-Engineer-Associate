@@ -72,8 +72,23 @@ resources:
             environment_version: "5"
 
 targets:
-  dev:
+  # Personal sandbox — deploy directly from the CLI. Default target so bare
+  # `databricks bundle deploy` (no --target) never touches shared dev/prod.
+  personal:
     mode: development
     default: true
+    workspace:
+      host: https://dbc-8247e575-4536.cloud.databricks.com/
+
+  # Shared dev workspace — deployed only via the GitHub Actions workflow.
+  dev:
+    mode: development
+    workspace:
+      host: https://dbc-9d50ffda-1704.cloud.databricks.com/
+
+  # Production (aws-hosted) — deployed only via the GitHub Actions workflow,
+  # gated behind the 'production' environment's required reviewer.
   prod:
     mode: production
+    workspace:
+      host: https://dbc-019e110a-3092.cloud.databricks.com/
