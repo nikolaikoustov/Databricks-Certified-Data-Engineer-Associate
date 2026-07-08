@@ -189,18 +189,31 @@ databricks bundle run --target personal bookstore_dlt
 
 The workflow at `.github/workflows/databricks-deploy.yml` deploys the bundle automatically:
 
-- Push/merge to the `dev` branch → `databricks bundle deploy --target dev` against the **development** workspace (`workspace`)
-- Push/merge to the `prod` branch → `databricks bundle deploy --target prod` against the **production** workspace (`aws-hosted`)
+- Push/merge to the `nikolaikoustov/dev` branch → `databricks bundle deploy --target dev` against the **shared dev** workspace
+- Push/merge to the `nikolaikoustov/prod` branch → `databricks bundle deploy --target prod` against the **production** workspace (`aws-hosted`)
 - Both can also be triggered manually via **Actions → Deploy Databricks Bundle → Run workflow**, choosing the target
-- Note: this repo does not currently have a `prod` branch — create one (e.g. `git checkout -b prod && git push -u origin prod`) before relying on the automatic trigger
+- Note: this repo does not currently have `nikolaikoustov/dev` or `nikolaikoustov/prod` branches — create them (e.g. `git checkout -b nikolaikoustov/prod && git push -u origin nikolaikoustov/prod`) before relying on the automatic trigger
+
+### One-time setup required in Databricks
+
+Do this once per shared workspace (`dev` and `prod` — not `personal`, which uses your own user PAT):
+
+1. Log into the workspace as an admin
+2. **Settings** → **Identity and access** → **Service principals** → **Manage** → create a new service principal (e.g. `github-actions-deploy`)
+3. On the new principal's entitlements, set **Workspace access** → **On** and **Admin access** → **Off** (least privilege — it only needs to be able to authenticate and deploy, not administer the workspace)
+4. Grant it Unity Catalog permissions on the target catalog/schema (Catalog Explorer → the catalog/schema → **Permissions** tab → grant the service principal `USE CATALOG`, `USE SCHEMA`, and enough of `CREATE TABLE`/`CREATE VOLUME`/`MODIFY` to deploy and run the pipeline)
+5. Open the service principal's own detail page → **Secrets** tab → **Generate secret** — this produces a **Client ID** and **Client Secret** (shown once — copy both immediately)
+
+Repeat for the other shared workspace. Keep track of which Client ID/Secret pair belongs to `dev` vs `prod` — you'll paste them into the matching GitHub Environment next.
 
 ### One-time setup required in GitHub
 
 1. **Create two Environments** (repo **Settings → Environments**):
    - `development`
    - `production` — add a **required reviewer** here so prod deploys pause for manual approval
-2. **Add secrets to each Environment** (not repo-level secrets, so `dev` and `prod` can point at different workspaces):
+2. **Add secrets to each Environment** (not repo-level secrets, so `dev` and `prod` can point at different workspaces and principals):
    - `DATABRICKS_HOST` — `https://dbc-9d50ffda-1704.cloud.databricks.com` for `development`, and `https://dbc-019e110a-3092.cloud.databricks.com/` (the `aws-hosted` production workspace) for `production`
-   - `DATABRICKS_TOKEN` — a personal access token or service-principal token for that workspace, scoped to deploy bundles (Can Manage on the target catalog/schema and pipeline)
+   - `DATABRICKS_CLIENT_ID` — the service principal's Client ID from the Databricks-side setup above, for that workspace
+   - `DATABRICKS_CLIENT_SECRET` — the matching Client Secret for that workspace
 
-Once both environments have secrets configured, pushes to `dev`/`prod` will validate and deploy the bundle automatically; production runs will wait for approval from a configured reviewer before deploying.
+Databricks service principals authenticate via OAuth (client ID/secret), not classic personal access tokens — the CLI picks this up automatically from those three env vars, no `DATABRICKS_TOKEN` needed. Once both environments have all three secrets configured, pushes to `nikolaikoustov/dev`/`nikolaikoustov/prod` will validate and deploy the bundle automatically; production runs will wait for approval from a configured reviewer before deploying.

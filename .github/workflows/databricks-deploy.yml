@@ -3,8 +3,8 @@ name: Deploy Databricks Bundle
 on:
   push:
     branches:
-      - dev
-      - prod
+      - nikolaikoustov/dev
+      - nikolaikoustov/prod
   workflow_dispatch:
     inputs:
       target:
@@ -19,7 +19,7 @@ jobs:
   deploy-dev:
     name: Deploy to shared dev
     if: |
-      github.ref == 'refs/heads/dev' ||
+      github.ref == 'refs/heads/nikolaikoustov/dev' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'dev')
     runs-on: ubuntu-latest
     environment: development
@@ -28,7 +28,8 @@ jobs:
       cancel-in-progress: false
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,7 +46,7 @@ jobs:
   deploy-prod:
     name: Deploy to production (aws-hosted)
     if: |
-      github.ref == 'refs/heads/prod' ||
+      github.ref == 'refs/heads/nikolaikoustov/prod' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'prod')
     runs-on: ubuntu-latest
     environment: production
@@ -54,7 +55,8 @@ jobs:
       cancel-in-progress: false
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
