@@ -44,7 +44,7 @@ resources:
       tasks:
         - task_key: "Run_Load_Data_Notebook"
           notebook_task:
-            notebook_path: "./4- Production Pipelines/4.3 - Land New Data Task"
+            notebook_path: "./4- Production Pipelines/4.3 - Land New Data Task.py"
             base_parameters:
               dataset_bookstore: "/Volumes/workspace/aws_training_data/bookstore_dataset"
           environment_key: "Default"
@@ -59,7 +59,7 @@ resources:
           depends_on:
             - task_key: "Run_DLT_Pipeline"
           notebook_task:
-            notebook_path: "./4- Production Pipelines/4.2 - Pipeline Results"
+            notebook_path: "./4- Production Pipelines/4.2 - Pipeline Results.py"
             base_parameters:
               catalog: "workspace"
               schema: "aws_training_data"
