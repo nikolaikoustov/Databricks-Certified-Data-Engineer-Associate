@@ -15,8 +15,16 @@ It also contains additional resources as well as steps to create and deploy pipe
 - https://docs.databricks.com/aws/en/sql/language-manual/functions/read_files
 - https://docs.databricks.com/aws/en/pyspark/reference/
 - https://docs.databricks.com/aws/en/ingestion/cloud-object-storage/
+- https://docs.databricks.com/aws/en/dev-tools/bundles/ci-cd-bundles
+- https://docs.databricks.com/aws/en/dev-tools/ci-cd/github-actions
 
-# Deploying and running pipelines
+# Deploying and running pipelines and jobs
+
+## Prerequisites
+
+1. Install the Databricks CLI: https://docs.databricks.com/dev-tools/cli/install.html
+2. Configure authentication: `databricks configure --token`
+3. Ensure the source data exists in `/Volumes/workspace/aws_training_data/bookstore_dataset` (run the `Includes/Copy-Datasets` notebook first)
 
 ## Deploying and running notebooks with DLT pipelines
 
@@ -30,24 +38,29 @@ The pipeline infrastructure is defined as code in `databricks.yml` at the reposi
 - Source notebook reference
 - Deployment targets (`dev` and `prod`)
 
-### Prerequisites
-
-1. Install the Databricks CLI: https://docs.databricks.com/dev-tools/cli/install.html
-2. Configure authentication: `databricks configure --token`
-3. Ensure the source data exists in `/Volumes/workspace/aws_training_data/bookstore_dataset` (run the `Includes/Copy-Datasets` notebook first)
-
 ### Deploying and running
+
+Using databricks CLI you can build then deploy Declarative Automation Bundles ('DABs').
+
+1. Validate the code to make into a DAB:
 
 ```bash
 # Validate the bundle definition
 databricks bundle validate --target dev
+```
 
+2. Create a DAB then deploy to a target:
+```
 # Deploy — creates/updates the pipeline in your Databricks workspace
 databricks bundle deploy --target dev
-
+```
+3. Run a pipeline:
+```
 # Run — triggers a pipeline update (materializes all tables)
 databricks bundle run --target dev bookstore_dlt
-
+```
+To deploy and run pipeline for another target:
+``` 
 # For production deployment
 databricks bundle deploy --target prod
 databricks bundle run --target prod bookstore_dlt
