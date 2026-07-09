@@ -102,7 +102,12 @@ targets:
 
   # Production (aws-hosted) — deployed only via the GitHub Actions workflow,
   # gated behind the 'production' environment's required reviewer.
+  # Uses its own catalog name (prod-workspace) since a Unity Catalog metastore
+  # cannot contain two catalogs both named "workspace".
   prod:
     mode: production
     workspace:
       host: https://dbc-019e110a-3092.cloud.databricks.com/
+    variables:
+      catalog: "prod-workspace"
+      datasets_path: "/Volumes/prod-workspace/aws_training_data/bookstore_dataset"
