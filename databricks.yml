@@ -115,4 +115,5 @@ targets:
       host: https://dbc-019e110a-3092.cloud.databricks.com/
     variables:
       catalog: "prod-workspace"
-      datasets_path: "/Volumes/prod-workspace/aws_training_data/bookstore_dataset"
+      schema: "default"
+      datasets_path: "/Volumes/prod-workspace/default/bookstore_dataset"
