@@ -113,7 +113,13 @@ targets:
   # to push bundle resources plus the Service Principal User role on this
   # run-as SP — not direct data access. See scripts/setup.sh.
   dev:
-    mode: development
+    # production (not development) mode: this is a shared workspace deployed
+    # only via CI, not a personal sandbox, so the per-user root_path
+    # uniqueness check that development mode enforces doesn't apply here —
+    # it fails validation since the deploying SP has no personal "username"
+    # and root_path is intentionally shared (see the root_path comment
+    # below), same as the prod target.
+    mode: production
     workspace:
       host: https://dbc-9d50ffda-1704.cloud.databricks.com/
       # Default root_path lives under the deploying identity's private user

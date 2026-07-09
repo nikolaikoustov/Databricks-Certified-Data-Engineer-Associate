@@ -42,6 +42,23 @@ The pipeline infrastructure is defined as code in `databricks.yml` at the reposi
   - `dev` — shared dev workspace, deployed only via GitHub Actions
   - `prod` — production (aws-hosted), deployed only via GitHub Actions — see [CI/CD](#cicd-automated-deployment-via-github-actions) below
 
+### `mode: development` vs `mode: production`
+
+Every target sets a bundle [deployment mode](https://docs.databricks.com/dev-tools/bundles/deployment-modes.html) — `personal` uses `development`, `dev` and `prod` use `production`. It's not just labelling; each mode changes real deploy behavior:
+
+- **`development`** — designed for one person iterating solo against their own workspace:
+  - Prefixes resource names with `[dev <username>]` and tags them, so several people's dev deployments don't collide or get confused for each other
+  - Pauses schedules/triggers on deployed jobs by default (nothing fires unexpectedly while you're iterating)
+  - Enforces that `root_path` be unique per deployer — it must start with `~/` or contain the deploying identity's username. This is the check that broke `dev` when it briefly used `development` mode: a shared, CI-only target has no personal "username" and its `root_path` is intentionally the same shared `/Shared/...` path every deploy, so validation failed with `root_path must start with '~/' or contain the current username`.
+  - Allows `bundle destroy` without the extra confirmation production mode requires
+
+- **`production`** — for shared, unattended, or CI-driven deployments:
+  - No name-mangling or auto-pausing — resources deploy exactly as declared, schedules run for real
+  - Requires `run_as` to be set explicitly (can't silently fall back to "whoever ran the deploy")
+  - `bundle destroy` requires explicit confirmation (`--auto-approve` to skip), since it's assumed to affect real, shared resources
+
+**Use `development`** for a target only you deploy to and iterate on directly (like `personal`). **Use `production`** for any target that's shared, CI-deployed, or where jobs must actually run on schedule — `dev` and `prod` both qualify here even though `dev` isn't the "real" production workspace, because both are shared and deployed exclusively by GitHub Actions rather than a single person iterating locally.
+
 ### Deploying and running
 
 Using databricks CLI you can build then deploy Declarative Automation Bundles ('DABs').
