@@ -61,7 +61,7 @@ else:
     dataset_bookstore = f"/Volumes/{data_catalog}/{db_name}/{dataset_volume_name}"
     checkpoints_bookstore = f"/Volumes/{data_catalog}/{db_name}/{checkpoints_volume_name}"
 
-    spark.sql(f"USE CATALOG {data_catalog}")
+    spark.sql(f"USE CATALOG `{data_catalog}`")
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {db_name}")
     spark.sql(f"USE SCHEMA {db_name}")
 

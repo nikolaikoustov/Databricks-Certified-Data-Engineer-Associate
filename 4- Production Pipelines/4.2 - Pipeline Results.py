@@ -3,7 +3,7 @@
 dbutils.widgets.text("catalog", "workspace")
 dbutils.widgets.text("schema", "aws_training_data")
 
-spark.sql(f"USE CATALOG {dbutils.widgets.get('catalog')}")
+spark.sql(f"USE CATALOG `{dbutils.widgets.get('catalog')}`")
 spark.sql(f"USE SCHEMA {dbutils.widgets.get('schema')}")
 
 # COMMAND ----------

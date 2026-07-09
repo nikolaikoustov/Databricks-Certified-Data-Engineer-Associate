@@ -105,7 +105,10 @@ targets:
   # Production (aws-hosted) — deployed only via the GitHub Actions workflow,
   # gated behind the 'production' environment's required reviewer.
   # Uses its own catalog name (prod-workspace) since a Unity Catalog metastore
-  # cannot contain two catalogs both named "workspace".
+  # cannot contain two catalogs both named "workspace". The hyphen requires
+  # every `USE CATALOG ...` statement to backtick-quote the catalog name
+  # (see Includes/Copy-Datasets.py and 4.2 - Pipeline Results.py) since
+  # unquoted it parses as subtraction and fails with UNRESOLVED_COLUMN.
   prod:
     mode: production
     workspace:
