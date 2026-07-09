@@ -28,3 +28,10 @@ GRANT SELECT ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
 -- in place.
 GRANT READ VOLUME ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
 GRANT WRITE VOLUME ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
+-- The DLT pipeline notebooks use legacy `CREATE OR REFRESH LIVE TABLE` /
+-- `STREAMING LIVE TABLE` syntax, which Lakeflow executes as materialized
+-- views / streaming tables respectively — separate object types from plain
+-- tables, each gated by their own CREATE privilege distinct from CREATE
+-- TABLE above.
+GRANT CREATE MATERIALIZED VIEW ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
+GRANT CREATE STREAMING TABLE ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
