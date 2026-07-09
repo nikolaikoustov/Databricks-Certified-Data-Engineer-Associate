@@ -14,6 +14,16 @@ variables:
   datasets_path:
     description: "UC Volume path containing the source bookstore dataset"
     default: "/Volumes/workspace/aws_training_data/bookstore_dataset"
+  run_as:
+    description: >-
+      Application (client) ID of the dedicated, minimally-privileged service
+      principal that deployed jobs/pipelines execute as for this target.
+      Empty default so `bundle validate` works before setup runs; the dev and
+      prod targets require a real value at deploy time. Populated by
+      `scripts/setup.sh <dev|prod>`, which also creates that service
+      principal and grants it just enough Unity Catalog access — see that
+      script and scripts/setup.sql. Do not set by hand.
+    default: ""
 
 resources:
   pipelines:
@@ -97,10 +107,17 @@ targets:
       host: https://dbc-8247e575-4536.cloud.databricks.com/
 
   # Shared dev workspace — deployed only via the GitHub Actions workflow.
+  # run_as (per-target override, keeps `personal` running as your own user)
+  # decouples "who deploys" from "who the deployed jobs/pipelines run as":
+  # the deploying identity (github-actions-deploy SP) only needs permission
+  # to push bundle resources plus the Service Principal User role on this
+  # run-as SP — not direct data access. See scripts/setup.sh.
   dev:
     mode: development
     workspace:
       host: https://dbc-9d50ffda-1704.cloud.databricks.com/
+    run_as:
+      service_principal_name: "${var.run_as}"
 
   # Production (aws-hosted) — deployed only via the GitHub Actions workflow,
   # gated behind the 'production' environment's required reviewer.
@@ -113,6 +130,8 @@ targets:
     mode: production
     workspace:
       host: https://dbc-019e110a-3092.cloud.databricks.com/
+    run_as:
+      service_principal_name: "${var.run_as}"
     variables:
       catalog: "prod-workspace"
       schema: "default"

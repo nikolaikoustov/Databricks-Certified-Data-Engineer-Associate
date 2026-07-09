@@ -196,13 +196,38 @@ The workflow at `.github/workflows/databricks-deploy.yml` deploys the bundle aut
 
 ### One-time setup required in Databricks
 
+The deploying identity and the executing identity are deliberately separate principals (segregation of duties):
+
+- **The deploying service principal** (e.g. `github-actions-deploy`) — only pushes bundle resources. It should hold **no direct Unity Catalog data grants**.
+- **`job-runner-<target>`** — a dedicated, minimally-privileged service principal per target that the deployed jobs/pipelines actually *run as* (via the bundle's `run_as` mapping). This is the one with `USE CATALOG`/`USE SCHEMA`/`CREATE TABLE`/`CREATE VOLUME`/`MODIFY`/`SELECT` on that target's catalog/schema.
+
 Do this once per shared workspace (`dev` and `prod` — not `personal`, which uses your own user PAT):
+
+1. Run `scripts/setup.sh <dev|prod>` (see below) as an account/workspace admin against that workspace. It creates `job-runner-<target>`, grants it the data access it needs (`scripts/setup.sql`), and writes its application ID into `databricks.yml` as that target's `run_as` variable.
+2. Grant your deploying service principal the **Service Principal User** role on `job-runner-<target>` (Settings → Identity and access → Service principals → `job-runner-<target>` → **Permissions** tab → add the deploying service principal with the "User" role). This is required for `run_as` to take effect — without it, `databricks bundle deploy` fails with a permissions error. `setup.sh` does not do this step for you.
+
+Repeat for the other shared workspace. Commit the `databricks.yml` change `setup.sh` makes so CI/CD picks up the populated `run_as` value automatically — no GitHub-side changes needed.
+
+#### `scripts/setup.sh`
+
+```bash
+# Run once per target, by an account/workspace admin, before the first deploy.
+# Safe to re-run — every step is idempotent.
+scripts/setup.sh dev
+scripts/setup.sh prod
+```
+
+It authenticates interactively (browser OAuth against the `DEFAULT` CLI profile by default — pass `--profile NAME` to use a different one — re-logging in against the right host each run since `dev` and `prod` are different workspaces), reads the target's catalog/schema straight out of `databricks.yml` via `databricks bundle validate`, and requires the `databricks` CLI, `jq`, and a Python 3 interpreter on your PATH.
+
+### One-time setup required for the deploying service principal
+
+Do this once per shared workspace, for the service principal you'll use as `DATABRICKS_CLIENT_ID`/`DATABRICKS_CLIENT_SECRET` below:
 
 1. Log into the workspace as an admin
 2. **Settings** → **Identity and access** → **Service principals** → **Manage** → create a new service principal (e.g. `github-actions-deploy`)
-3. On the new principal's entitlements, set **Workspace access** → **On** and **Admin access** → **Off** (least privilege — it only needs to be able to authenticate and deploy, not administer the workspace)
-4. Grant it Unity Catalog permissions on the target catalog/schema (Catalog Explorer → the catalog/schema → **Permissions** tab → grant the service principal `USE CATALOG`, `USE SCHEMA`, and enough of `CREATE TABLE`/`CREATE VOLUME`/`MODIFY` to deploy and run the pipeline)
-5. Open the service principal's own detail page → **Secrets** tab → **Generate secret** — this produces a **Client ID** and **Client Secret** (shown once — copy both immediately)
+3. On the new principal's entitlements, set **Workspace access** → **On** and **Admin access** → **Off** (least privilege — it only needs to be able to authenticate and deploy, not administer the workspace, and not touch the target data directly)
+4. Open the service principal's own detail page → **Secrets** tab → **Generate secret** — this produces a **Client ID** and **Client Secret** (shown once — copy both immediately)
+5. Grant it the Service Principal User role on `job-runner-<target>` (see previous section)
 
 Repeat for the other shared workspace. Keep track of which Client ID/Secret pair belongs to `dev` vs `prod` — you'll paste them into the matching GitHub Environment next.
 
