@@ -29,9 +29,14 @@ def download_dataset(source, target):
 
 # COMMAND ----------
 
+dbutils.widgets.text("catalog", "workspace")
+dbutils.widgets.text("schema", "aws_training_data")
+
+# COMMAND ----------
+
 data_source_uri = "s3://dalhussein-courses/datasets/bookstore/v1/"
 
-db_name = "aws_training_data"
+db_name = dbutils.widgets.get("schema")
 
 catalogs = spark.sql("SHOW CATALOGS").collect()
 hive_exists = any(row.catalog == 'hive_metastore' for row in catalogs)
@@ -50,7 +55,7 @@ if hive_exists:
     except:
         pass
 else:
-    data_catalog = 'workspace'
+    data_catalog = dbutils.widgets.get("catalog")
     dataset_volume_name = "bookstore_dataset"
     checkpoints_volume_name = "bookstore_checkpoints"
     dataset_bookstore = f"/Volumes/{data_catalog}/{db_name}/{dataset_volume_name}"

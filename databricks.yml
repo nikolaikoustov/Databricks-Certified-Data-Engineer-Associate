@@ -57,6 +57,8 @@ resources:
           notebook_task:
             notebook_path: "./4- Production Pipelines/4.3 - Land New Data Task.py"
             base_parameters:
+              catalog: "${var.catalog}"
+              schema: "${var.schema}"
               dataset_bookstore: "${var.datasets_path}"
           environment_key: "Default"
 
