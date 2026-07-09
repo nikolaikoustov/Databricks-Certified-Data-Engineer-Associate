@@ -1,4 +1,4 @@
-# Declarative Automation Bundle definition for the Bookstore DLT Pipeline
+  # Declarative Automation Bundle definition for the Bookstore DLT Pipeline
 # Deploy with: databricks bundle deploy --target dev
 
 bundle:
@@ -171,7 +171,7 @@ targets:
       service_principal_name: "${var.run_as}"
     variables:
       catalog: "prod-workspace"
-      schema: "default"
+      schema: "aws_training_data"
       datasets_path: "/Volumes/prod-workspace/default/bookstore_dataset"
       run_as: "a3eafda7-0112-41a8-a0ae-03f760eeaa3b"
     resources:
