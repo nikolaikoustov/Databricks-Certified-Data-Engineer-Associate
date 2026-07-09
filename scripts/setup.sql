@@ -19,3 +19,12 @@ GRANT CREATE TABLE ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
 GRANT CREATE VOLUME ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
 GRANT MODIFY ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
 GRANT SELECT ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
+-- READ/WRITE VOLUME are separate from SELECT/MODIFY: SELECT/MODIFY govern
+-- table access, but "4.3 - Land New Data Task" reads and writes raw files
+-- directly inside the volume (dbutils.fs.ls/cp, json.`path` queries), which
+-- needs the volume file-I/O privileges specifically. Without these, file
+-- reads fail with INSUFFICIENT_PERMISSIONS: "does not have permission
+-- SELECT on any file" even though the schema-level SELECT grant above is
+-- in place.
+GRANT READ VOLUME ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
+GRANT WRITE VOLUME ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
