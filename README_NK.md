@@ -231,6 +231,8 @@ Repeat for the other shared workspace. Commit the `databricks.yml` change `setup
 
 > **Why `workspace.root_path` is pinned to `/Shared/...` in `databricks.yml`:** without it, the bundle's default root path is `/Workspace/Users/<deploying-identity>/.bundle/...` — private to `github-actions-deploy`. `run_as` makes the job/pipeline *execute* as `job-runner-<target>`, but that identity still needs to *read* the notebook files, and it has no ACL on a folder that belongs to a different user. This surfaces as `Unable to access the notebook "...": ... lacks the required permissions` at job run time (not at deploy time, since deploying doesn't require reading the notebooks back). Deploying under `/Shared` instead decouples the files' location from the deploying identity's home folder.
 
+> **Why each target's pipelines have an explicit `permissions: CAN_RUN` block for `run_as`:** the bundle-level/target-level `run_as` makes a *job* execute as `job-runner-<target>`, but a Lakeflow pipeline is a separate workspace object with its own ACL. When a job task is a `pipeline_task` (like `Run_DLT_Pipeline`), the job's `run_as` identity still needs to be explicitly granted `CAN_RUN` on the pipeline it's triggering — deploying the bundle doesn't grant this automatically the way it does for the job itself. Without it, the job fails at the pipeline step with `UNAUTHORIZED_ERROR: User <job-runner-id> does not have Run permissions on pipeline <id>`.
+
 #### `scripts/setup.sh`
 
 ```bash

@@ -134,6 +134,23 @@ targets:
       service_principal_name: "${var.run_as}"
     variables:
       run_as: "6755cda2-24cd-494b-ac8b-c6be85009f6f"
+    resources:
+      pipelines:
+        # `run_as` makes the job execute as job-runner-<target>, but Lakeflow
+        # pipelines have their own workspace-object ACL: the job's
+        # pipeline_task step needs job-runner explicitly granted CAN_RUN on
+        # the pipeline resource itself, or it fails with UNAUTHORIZED_ERROR
+        # ("does not have Run permissions on pipeline ..."). Deploying
+        # doesn't grant this automatically for pipelines the way it does for
+        # jobs run_as.
+        bookstore_dlt:
+          permissions:
+            - service_principal_name: "${var.run_as}"
+              level: CAN_RUN
+        bookstore_pyspark_dlt:
+          permissions:
+            - service_principal_name: "${var.run_as}"
+              level: CAN_RUN
 
   # Production (aws-hosted) — deployed only via the GitHub Actions workflow,
   # gated behind the 'production' environment's required reviewer.
@@ -157,3 +174,16 @@ targets:
       schema: "default"
       datasets_path: "/Volumes/prod-workspace/default/bookstore_dataset"
       run_as: "a3eafda7-0112-41a8-a0ae-03f760eeaa3b"
+    resources:
+      pipelines:
+        # See the comment on dev's pipeline permissions above — same fix,
+        # required here too since job-runner-prod hit this exact
+        # UNAUTHORIZED_ERROR against the pipeline's default permissions.
+        bookstore_dlt:
+          permissions:
+            - service_principal_name: "${var.run_as}"
+              level: CAN_RUN
+        bookstore_pyspark_dlt:
+          permissions:
+            - service_principal_name: "${var.run_as}"
+              level: CAN_RUN
