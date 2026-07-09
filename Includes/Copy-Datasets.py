@@ -142,4 +142,14 @@ def load_new_json_data(all=False):
 
 # COMMAND ----------
 
-download_dataset(data_source_uri, dataset_bookstore)
+# job-runner-<target> (the run_as identity for dev/prod) has no access to
+# the source S3 bucket - it's an ungoverned external path with no Unity
+# Catalog External Location registered for it, and granting that requires
+# an AWS IAM role that's out of scope for this repo. Only download from S3
+# the first time a target's volume is seeded (as an admin, e.g. via
+# `personal` or a one-off CLI run); once seeded, scheduled job-runner runs
+# skip this entirely and never need source bucket access.
+if not path_exists(f"{dataset_bookstore}/orders-streaming"):
+    download_dataset(data_source_uri, dataset_bookstore)
+else:
+    print("Dataset already seeded in this volume, skipping S3 download")
