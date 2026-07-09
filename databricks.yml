@@ -23,7 +23,7 @@ variables:
       `scripts/setup.sh <dev|prod>`, which also creates that service
       principal and grants it just enough Unity Catalog access — see that
       script and scripts/setup.sql. Do not set by hand.
-    default: ""
+    default: "dummy"
 
 resources:
   pipelines:
@@ -118,6 +118,8 @@ targets:
       host: https://dbc-9d50ffda-1704.cloud.databricks.com/
     run_as:
       service_principal_name: "${var.run_as}"
+    variables:
+      run_as: "6755cda2-24cd-494b-ac8b-c6be85009f6f"
 
   # Production (aws-hosted) — deployed only via the GitHub Actions workflow,
   # gated behind the 'production' environment's required reviewer.
@@ -136,3 +138,4 @@ targets:
       catalog: "prod-workspace"
       schema: "default"
       datasets_path: "/Volumes/prod-workspace/default/bookstore_dataset"
+      run_as: "a3eafda7-0112-41a8-a0ae-03f760eeaa3b"
