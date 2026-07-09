@@ -208,6 +208,8 @@ Do this once per shared workspace (`dev` and `prod` — not `personal`, which us
 
 Repeat for the other shared workspace. Commit the `databricks.yml` change `setup.sh` makes so CI/CD picks up the populated `run_as` value automatically — no GitHub-side changes needed.
 
+> **Why `workspace.root_path` is pinned to `/Shared/...` in `databricks.yml`:** without it, the bundle's default root path is `/Workspace/Users/<deploying-identity>/.bundle/...` — private to `github-actions-deploy`. `run_as` makes the job/pipeline *execute* as `job-runner-<target>`, but that identity still needs to *read* the notebook files, and it has no ACL on a folder that belongs to a different user. This surfaces as `Unable to access the notebook "...": ... lacks the required permissions` at job run time (not at deploy time, since deploying doesn't require reading the notebooks back). Deploying under `/Shared` instead decouples the files' location from the deploying identity's home folder.
+
 #### `scripts/setup.sh`
 
 ```bash

@@ -116,6 +116,14 @@ targets:
     mode: development
     workspace:
       host: https://dbc-9d50ffda-1704.cloud.databricks.com/
+      # Default root_path lives under the deploying identity's private user
+      # folder (/Workspace/Users/<github-actions-deploy>/.bundle/...), which
+      # job-runner-dev has no ACL on — it can deploy jobs/pipelines via
+      # run_as, but the job-runner identity can't read notebook files sitting
+      # in a folder it has no permission on, and fails with "Unable to
+      # access the notebook". Pinning root_path under /Shared decouples the
+      # deployed files' location from the deploying SP's home folder.
+      root_path: /Shared/.bundle/${bundle.name}/${bundle.target}
     run_as:
       service_principal_name: "${var.run_as}"
     variables:
@@ -132,6 +140,10 @@ targets:
     mode: production
     workspace:
       host: https://dbc-019e110a-3092.cloud.databricks.com/
+      # See the comment on dev's root_path above — same fix, required here
+      # too since job-runner-prod hit this exact "Unable to access the
+      # notebook" error against the default user-scoped root_path.
+      root_path: /Shared/.bundle/${bundle.name}/${bundle.target}
     run_as:
       service_principal_name: "${var.run_as}"
     variables:
