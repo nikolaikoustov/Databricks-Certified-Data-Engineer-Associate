@@ -172,7 +172,7 @@ targets:
     variables:
       catalog: "prod-workspace"
       schema: "aws_training_data"
-      datasets_path: "/Volumes/prod-workspace/default/bookstore_dataset"
+      datasets_path: "/Volumes/prod-workspace/aws_training_data/bookstore_dataset"
       run_as: "a3eafda7-0112-41a8-a0ae-03f760eeaa3b"
     resources:
       pipelines:
