@@ -148,6 +148,6 @@ echo "==> Writing run_as = $RUN_AS_SP_APP_ID into databricks.yml [$TARGET]"
 "$PYTHON_BIN" "$REPO_ROOT/scripts/set_target_variable.py" "$BUNDLE_FILE" "$TARGET" run_as "$RUN_AS_SP_APP_ID"
 
 echo "==> Done. Before deploying, make sure your CI/CD deploying service principal has been"
-echo "    granted the 'Service Principal User' role on '$RUN_AS_SP_NAME' ($RUN_AS_SP_APP_ID) —"
+echo "    granted 'Use' permission on '$RUN_AS_SP_NAME' ($RUN_AS_SP_APP_ID) —"
 echo "    see README_NK.md. Then 'databricks bundle deploy --target $TARGET' will deploy"
 echo "    jobs/pipelines to run as $RUN_AS_SP_NAME."

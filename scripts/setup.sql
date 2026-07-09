@@ -30,8 +30,10 @@ GRANT READ VOLUME ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
 GRANT WRITE VOLUME ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
 -- The DLT pipeline notebooks use legacy `CREATE OR REFRESH LIVE TABLE` /
 -- `STREAMING LIVE TABLE` syntax, which Lakeflow executes as materialized
--- views / streaming tables respectively — separate object types from plain
--- tables, each gated by their own CREATE privilege distinct from CREATE
--- TABLE above.
+-- views / streaming tables respectively. Materialized views are gated by
+-- their own CREATE MATERIALIZED VIEW privilege, distinct from CREATE TABLE.
+-- Streaming tables, despite the separate syntax, are plain tables under
+-- UC's privilege model and are already covered by CREATE TABLE above —
+-- there is no separate "CREATE STREAMING TABLE" privilege (this metastore's
+-- privilege model version rejects it with PRIVILEGE_NOT_APPLICABLE_TO_ENTITY).
 GRANT CREATE MATERIALIZED VIEW ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
-GRANT CREATE STREAMING TABLE ON SCHEMA `{{CATALOG}}`.`{{SCHEMA}}` TO `{{RUN_AS_SP_ID}}`;
